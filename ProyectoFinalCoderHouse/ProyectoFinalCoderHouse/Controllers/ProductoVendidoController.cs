@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using System.Data.SqlClient;
 using ProyectoFinalCoderHouse.Models;
+using ProyectoFinalCoderHouse.Repositories;
 
 namespace ProyectoFinalCoderHouse.Controllers
 {
@@ -10,58 +11,96 @@ namespace ProyectoFinalCoderHouse.Controllers
     [Route("[controller]")]
     public class ProductoVendidoController : ControllerBase
     {
-        private readonly ILogger<ProductoVendidoController> _logger;
+        private ProductoVendidoRepository repository = new ProductoVendidoRepository();
 
-        public ProductoVendidoController(ILogger<ProductoVendidoController> logger)
+        [HttpGet]
+        public ActionResult<List<ProductoVendido>> Get()
         {
-            _logger = logger;
+            try
+            {
+                List<ProductoVendido> listaProductoVendido = repository.listarProductoVendido();
+                return Ok(listaProductoVendido);
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
 
-        [EnableCors("AllowAnyOrigin")]
-        [HttpGet]
-        [Route("getallsoldproducts")]
-
-        public dynamic GetSoldProducts()
+        [HttpGet("{Id}")]
+        public ActionResult<ProductoVendido> Get(long Id)
         {
-            String connectionString = "Data Source=.\\SQLEXPRESS; Initial Catalog = SistemaGestion; Integrated Security = True";
-            //String connectionString = "Server=sql.bsite.net\\MSSQL2016;Database=mammary0743_coderdb;User Id=mammary0743_coderdb;Password=2XuMoYCSjd5oVZ;\r\n";
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                try
+                ProductoVendido? productoVendido = repository.obtenerProductoVendido(Id);
+                if (productoVendido != null)
                 {
-                    using (SqlCommand command = new SqlCommand("SELECT * FROM ProductoVendido", connection))
-                    {
-                        connection.Open();
-                        List<ProductoVendido> SoldProductList = new List<ProductoVendido>();
-                        using (SqlDataReader reader = command.ExecuteReader())
-                        {
-                            if (reader.HasRows)
-                            {
-                                while (reader.Read())
-                                {
-                                    ProductoVendido productSold = new ProductoVendido();
-                                    productSold.Id = int.Parse(reader["Id"].ToString());
-                                    productSold.Stock = int.Parse(reader["Stock"].ToString());
-                                    productSold.IdProducto = int.Parse(reader["IdProducto"].ToString());
-                                    productSold.IdVenta = int.Parse(reader["IdVenta"].ToString());
+                    return Ok(productoVendido);
+                }
+                else
+                {
+                    return NotFound("Producto no encontrado");
+                }
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+        }
 
-                                    SoldProductList.Add(productSold);
-                                }
-                                connection.Close();
-                                var SoldProductListJson = JsonSerializer.Serialize(SoldProductList);
-                                return SoldProductListJson;
-                            }
-                            else
-                            {
-                                return "No data";
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
+        [HttpPost]
+        public ActionResult Post([FromBody] ProductoVendido productoVendido)
+        {
+            try
+            {
+                ProductoVendido productoiVendidoCreado = repository.crearProductoVendido(productoVendido);
+                return StatusCode(StatusCodes.Status201Created, productoiVendidoCreado);
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+        }
+
+        [HttpDelete]
+        public ActionResult Delete([FromBody] long Id)
+        {
+            try
+            {
+                bool seElimino = repository.eliminarProductoVendido(Id);
+                if (seElimino)
                 {
-                    return ex.Message;
+                    return Ok();
                 }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+        }
+
+        [HttpPut("{id}")]
+        public ActionResult<ProductoVendido> Put(long id, [FromBody] ProductoVendido productoVendidoAActualizar)
+        {
+            try
+            {
+                ProductoVendido? productoVendidoActualizado = repository.actualizarProductoVendido(id, productoVendidoAActualizar);
+                if (productoVendidoActualizado != null)
+                {
+                    return Ok(productoVendidoActualizado);
+                }
+                else
+                {
+                    return NotFound("El producto no fue encontrado");
+                }
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
             }
         }
     }

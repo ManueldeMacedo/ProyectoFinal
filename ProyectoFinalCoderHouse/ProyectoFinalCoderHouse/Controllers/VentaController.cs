@@ -12,12 +12,6 @@ namespace ProyectoFinalCoderHouse.Controllers
     [Route("[controller]")]
     public class VentaController : ControllerBase
     {
-        private readonly ILogger<VentaController> _logger;
-
-        public VentaController(ILogger<VentaController> logger)
-        {
-            _logger = logger;
-        }
 
         [EnableCors("AllowAnyOrigin")]
         [HttpGet]

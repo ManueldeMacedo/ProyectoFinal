@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using System.Data.SqlClient;
+using ProyectoFinalCoderHouse.Repositories;
 
 namespace ProyectoFinalCoderHouse.Controllers
 {
@@ -10,60 +11,117 @@ namespace ProyectoFinalCoderHouse.Controllers
     [Route("[controller]")]
     public class ProductoController : ControllerBase
     {
-        private readonly ILogger<ProductoController> _logger;
+        private ProductoRepository repository = new ProductoRepository();
 
-        public ProductoController(ILogger<ProductoController> logger)
+        [HttpGet]
+        public ActionResult<List<Producto>> Get()
         {
-            _logger = logger;
+            try
+            {
+                List<Producto> listaProducto = repository.listarProducto();
+                return Ok(listaProducto);
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
         }
 
-        [EnableCors("AllowAnyOrigin")]
-        [HttpGet]
-        [Route("getallproducts")]
-
-        public dynamic GetProducto()
+        [HttpGet("{Id}")]
+        public ActionResult<Producto> Get(long Id)
         {
-            String connectionString = "Data Source=.\\SQLEXPRESS; Initial Catalog = SistemaGestion; Integrated Security = True";
-            //String connectionString = "Server=sql.bsite.net\\MSSQL2016;Database=mammary0743_coderdb;User Id=mammary0743_coderdb;Password=2XuMoYCSjd5oVZ;\r\n";
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                try
+                Producto? producto = repository.obtenerProducto(Id);
+                if (producto != null)
                 {
-                    using (SqlCommand command = new SqlCommand("SELECT * FROM Producto", connection))
-                    {
-                        connection.Open();
-                        List<Producto> ProductList = new List<Producto>();
-                        using (SqlDataReader reader = command.ExecuteReader())
-                        {
-                            if (reader.HasRows)
-                            {
-                                while (reader.Read())
-                                {
-                                    Producto product = new Producto();
-                                    product.Id = int.Parse(reader["Id"].ToString());
-                                    product.Descripcion = reader["Descripciones"].ToString();
-                                    product.Costo = decimal.Parse(reader["Costo"].ToString());
-                                    product.PrecioVenta = decimal.Parse(reader["PrecioVenta"].ToString());
-                                    product.Stock = int.Parse(reader["Stock"].ToString());
-                                    product.IdUsuario = int.Parse(reader["IdUsuario"].ToString());
+                    return Ok(producto);
+                }
+                else
+                {
+                    return NotFound("Producto no encontrado");
+                }
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+        }
 
-                                    ProductList.Add(product);
-                                }
-                                connection.Close();
-                                var ProducListJson = JsonSerializer.Serialize(ProductList);
-                                return ProducListJson;
-                            }
-                            else
-                            {
-                                return "No data";
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
+        [HttpGet("GetProducto/{Id}")]
+        public ActionResult<Producto> GetProducto(long Id)
+        {
+            try
+            {
+                Producto? producto = repository.obtenerProducto(Id);
+                if (producto != null)
                 {
-                    return ex.Message;
+                    return Ok(producto);
                 }
+                else
+                {
+                    return NotFound("Producto no encontrado");
+                }
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+        }
+
+        [HttpPost]
+        public ActionResult Post([FromBody] Producto producto)
+        {
+            try
+            {
+                Producto productoCreado = repository.crearProducto(producto);
+                return StatusCode(StatusCodes.Status201Created, productoCreado);
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+        }
+
+        [HttpDelete]
+        public ActionResult Delete([FromBody] long Id)
+        {
+            try
+            {
+                bool seElimino = repository.eliminarProducto(Id);
+                if (seElimino)
+                {
+                    return Ok();
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+        }
+
+        [HttpPut("{id}")]
+        public ActionResult<Producto> Put(long id, [FromBody] Producto productoAActualizar)
+        {
+            try
+            {
+                Producto? productoActualizado = repository.actualizarProducto(id, productoAActualizar);
+                if (productoActualizado != null)
+                {
+                    return Ok(productoActualizado);
+                }
+                else
+                {
+                    return NotFound("El producto no fue encontrado");
+                }
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
             }
         }
     }

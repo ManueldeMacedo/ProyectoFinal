@@ -8,9 +8,11 @@ namespace ProyectoFinalCoderHouse.Models
 {
     public class Venta
     {
-        public int Id { get; set; }
-        public int IdUsuario { get; set; }
+        public long Id { get; set; }
+        public long IdUsuario { get; set; }
         public string Comentarios { get; set; }
+
+        List<ProductoVendido>productosVendidos { get; set; }
 
         public Venta()
         {
@@ -18,7 +20,7 @@ namespace ProyectoFinalCoderHouse.Models
             Comentarios = "";
             IdUsuario = 0;
         }
-        public Venta(int id, string comentarios, int idUsuario)
+        public Venta(long id, string comentarios, long idUsuario)
         {
             Id = id;
             Comentarios = comentarios;
