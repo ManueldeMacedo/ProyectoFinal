@@ -69,5 +69,26 @@ namespace ProyectoFinalCoderHouse.Controllers
                 return Problem(ex.Message);
             }
         }
+
+        [HttpDelete]
+        public ActionResult Delete([FromBody] long Id)
+        {
+            try
+            {
+                bool seElimino = repository.eliminarUsuario(Id);
+                if (seElimino)
+                {
+                    return Ok();
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+        }
     }
 }

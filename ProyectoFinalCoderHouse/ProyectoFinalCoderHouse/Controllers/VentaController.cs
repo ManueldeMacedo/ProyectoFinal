@@ -5,6 +5,7 @@ using System.Data.SqlClient;
 using System.Diagnostics.Metrics;
 using System.Security.Cryptography;
 using System.Text.Json;
+using ProyectoFinalCoderHouse.Repositories;
 
 namespace ProyectoFinalCoderHouse.Controllers
 {
@@ -12,52 +13,95 @@ namespace ProyectoFinalCoderHouse.Controllers
     [Route("[controller]")]
     public class VentaController : ControllerBase
     {
+        private VentaRepository repository = new VentaRepository();
 
         [EnableCors("AllowAnyOrigin")]
         [HttpGet]
-        [Route("getVentas")]
+        [Route("[action]")]
 
-        public dynamic GetVentas()
+        public ActionResult<List<Venta>> Get()
         {
-            String connectionString = "Data Source=.\\SQLEXPRESS; Initial Catalog = SistemaGestion; Integrated Security = True";
-            //String connectionString = "Server=sql.bsite.net\\MSSQL2016;Database=mammary0743_coderdb;User Id=mammary0743_coderdb;Password=2XuMoYCSjd5oVZ;\r\n";
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                try
-                {
-                    using (SqlCommand command = new SqlCommand("SELECT * FROM Venta", connection))
-                    {
-                        connection.Open();
-                        List<Venta> SellList = new List<Venta>();
-                        using (SqlDataReader reader = command.ExecuteReader())
-                        {
-                            if (reader.HasRows)
-                            {
-                                while (reader.Read())
-                                {
-                                    Venta sell = new Venta();
-                                    sell.Id = Int32.Parse(reader["Id"].ToString());
-                                    sell.Comentarios = reader["Comentarios"].ToString();
-                                    sell.IdUsuario = Int32.Parse(reader["IdUsuario"].ToString());
+                List<Venta>? VentaList = repository.listarVenta();
+                return Ok(VentaList);
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+        }
 
-                                    SellList.Add(sell);
-                                }
-                                connection.Close();
-                                var SellListJson = JsonSerializer.Serialize(SellList);
-                                return SellListJson;
-                            }
-                            else
-                            {
-                                return "No data";
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
+        [HttpGet("{Id}")]
+
+        public ActionResult<Venta> Get(long Id)
+        {
+            try
+            {
+                Venta? Venta = repository.obtenerVenta(Id);
+                return Ok(Venta);
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+        }
+
+        [HttpPut("{id}")]
+        public ActionResult<Venta> Put(long id, [FromBody] Venta ventaAActualizar)
+        {
+            try
+            {
+                Venta? ventaActualizado = repository.actualizarVenta(id, ventaAActualizar);
+                if (ventaActualizado != null)
                 {
-                    return ex.Message;
+                    return Ok(ventaActualizado);
+                }
+                else
+                {
+                    return NotFound("la venta no fue encontrada");
                 }
             }
-        }        
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+        }
+
+        [HttpPost]
+        public ActionResult Post([FromBody] Venta venta)
+        {
+            try
+            {
+                Venta ventaCreado = repository.crearVenta(venta);
+                return StatusCode(StatusCodes.Status201Created, ventaCreado);
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+        }
+
+        [HttpDelete]
+        public ActionResult Delete([FromBody] long Id)
+        {
+            try
+            {
+                bool seElimino = repository.eliminarVenta(Id);
+                if (seElimino)
+                {
+                    return Ok();
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+        }
+
     }
 }

@@ -139,5 +139,29 @@ namespace ProyectoFinalCoderHouse.Repositories
             }
         }
 
+        public bool eliminarUsuario(long Id)
+        {
+            if (connection == null)
+            {
+                throw new Exception("Conexión no establecida");
+            }
+            try
+            {
+                int filasAfectadas = 0;
+                using (SqlCommand cmd = new SqlCommand("DELETE FROM Usuario WHERE Id = @Id", connection))
+                {
+                    connection.Open();
+                    cmd.Parameters.Add(new SqlParameter("Id", System.Data.SqlDbType.BigInt) { Value = Id });
+                    filasAfectadas = cmd.ExecuteNonQuery();
+                }
+                connection.Close();
+                return filasAfectadas > 0;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
     }
 }
